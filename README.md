@@ -267,6 +267,22 @@ BleManager.getInstance().scan(new OnScanListener() {
     @Override
     public void onHRVDiscovery(HRVDevice hrvDevice) {
         Log.d("benegearble", "HRV广播包:" + hrvDevice.getPackage().toString());
+        Log.d("benegearble", "电量:" + hrvDevice.getPackage().getBattery());
+        Log.d("benegearble", "心率:" + hrvDevice.getPackage().getHr());
+        Log.d("benegearble", "SQ:" + hrvDevice.getPackage().getSq());
+        Log.d("benegearble", "步数:" + hrvDevice.getPackage().getStep());
+        Log.d("benegearble", "运动强度:" + hrvDevice.getPackage().getExerciseIntensity());
+        Log.d("benegearble", "SDNN:" + hrvDevice.getPackage().getSDNN());
+        Log.d("benegearble", "TP:" + hrvDevice.getPackage().getTP());
+        Log.d("benegearble", "RMSSD:" + hrvDevice.getPackage().getRMSSD());
+        Log.d("benegearble", "PNN50:" + hrvDevice.getPackage().getPNN50());
+        Log.d("benegearble", "NN50:" + hrvDevice.getPackage().getNN50());
+        Log.d("benegearble", "LF:" + hrvDevice.getPackage().getLF());
+        Log.d("benegearble", "HF:" + hrvDevice.getPackage().getHF());
+        Log.d("benegearble", "LF/HF:" + hrvDevice.getPackage().getLF_HF());
+        Log.d("benegearble", "NLF:" + hrvDevice.getPackage().getNLF());
+        Log.d("benegearble", "NHF:" + hrvDevice.getPackage().getNHF());
+        Log.d("benegearble", "接收时间:" + hrvDevice.getPackage().getTimestamp());
     }
 
     //扫描到Temp广播包时回调
