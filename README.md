@@ -11,7 +11,7 @@ benegearble是获取硬件设备数据的蓝牙框架，快速获取ECG125、ECG
 
 ## 下载地址
 
-> implementation 'com.fjxdkj.benegearble:benegearble:1.0.3'
+> implementation 'com.fjxdkj.benegearble:benegearble:1.0.4'
 
 ## 注意事项
 
