@@ -11,7 +11,7 @@ benegearble是获取硬件设备数据的蓝牙框架，快速获取ECG125、ECG
 
 ## 下载地址
 
-> implementation 'com.fjxdkj.benegearble:benegearble:1.0.4'
+> implementation 'com.fjxdkj.benegearble:benegearble:1.0.5'
 
 ## 注意事项
 
@@ -67,7 +67,7 @@ public void onCreate() {
     BleManager.getInstance().init(this);
     
     BleScanRuleConfig scanRuleConfig = new BleScanRuleConfig.Builder()
-            .setScanTimeOut(30*60*1000)  //扫描时间
+            .setScanTimeOut(30*60*1000)  //扫描时间。当输入小于0的数时，无限循环扫描。
             .setDeviceMac("H1:48:58:45:87:54")  //只扫描指定mac的设备
             .setDeviceName(true,"ECG+") //扫描指定名称的设备
             .build()
@@ -204,6 +204,40 @@ if(!BleManager.getInstance().isBlueEnable()){
         applyPermission();
     else
         scan();
+}
+
+
+//检查权限是否打开以及蓝牙开关也打开，则可以进行扫描
+@Override
+public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    switch (requestCode){
+        case 1:
+            boolean result=true;
+            for(int i=0;i<grantResults.length;i++){
+                if(grantResults[i]!=PackageManager.PERMISSION_GRANTED){
+                    result=false;
+                    break;
+                }
+            }
+            if(result && BleManager.getInstance().isBlueEnable()){
+              scan();
+            }
+            break;
+    }
+}    
+
+
+@Override
+protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    switch (requestCode){
+        case 1:
+            if(resultCode==RESULT_OK){
+                if(!isHasPermission())
+                    applyPermission();
+                else
+                    scan();
+            }
+    }
 }
 
 ```
