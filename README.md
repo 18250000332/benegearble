@@ -11,7 +11,7 @@ benegearble是获取硬件设备数据的蓝牙框架，快速获取ECG125、ECG
 
 ## 下载地址
 
-> implementation 'com.fjxdkj.benegearble:benegearble:1.0.5'
+> implementation 'com.fjxdkj:benegearble:1.1.4'
 
 ## 注意事项
 
@@ -130,7 +130,7 @@ private void applyPermission() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
-    }
+}
 
 
 //检查权限是否打开以及蓝牙开关也打开，则可以进行扫描
@@ -240,93 +240,106 @@ protected void onActivityResult(int requestCode, int resultCode, @Nullable Inten
     }
 }
 
+//是否已经申请了定位权限
+private boolean  isHasPermission(){
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ;
+    }
+
+//申请权限
+private void applyPermission() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        }
+}
+
 ```
 
 ### 7.扫描
 
 ```java
-BleManager.getInstance().scan(new OnScanListener() {
-    @Override
-    public void onScanStarted() {
-        Log.d("benegearble", "onScanStarted");
-    }
+        BleManager.getInstance().scan(new OnScanListener() {
+            @Override
+            public void onScanStarted() {
+                Log.d("benegearble", "onScanStarted");
+            }
 
-    @Override
-    public void onScanError(String msg) {
-        Log.d("benegearble", "onScanError=" + msg);
-    }
+            @Override
+            public void onScanError(String msg) {
+                Log.d("benegearble", "onScanError=" + msg);
+            }
 
-    @Override
-    public void onScanFinish() {
-        Log.d("benegearble", "onScanFinish");
-    }
+            @Override
+            public void onScanFinish() {
+                Log.d("benegearble", "onScanFinish");
+            }
 
-    //扫描到EEG广播包时回调
-    @Override
-    public void onEEGDiscovery(EEGDevice eegDevice) {
-        Log.d("benegearble", "EEG广播包:" + eegDevice.getPackage().toString());
-        Log.d("benegearble", "电量:" + eegDevice.getPackage().getBattery());
-        Log.d("benegearble", "gamma:" + eegDevice.getPackage().getGamma());
-        Log.d("benegearble", "bata:" + eegDevice.getPackage().getBata());
-        Log.d("benegearble", "alpha:" + eegDevice.getPackage().getAlpha());
-        //0:无,1:左转,2:右转
-        Log.d("benegearble", "眼动指令:" + eegDevice.getPackage().getEyeDirection());
-        //值越低越专注
-        Log.d("benegearble", "专注力值:" + eegDevice.getPackage().getAttention());
-        //0:眼珠向前看且注意力分散，1:眼珠向前看且注意力集中
-        //2:眼珠向左转且注意力集中,4:眼珠向左转且注意力分散
-        //3:眼珠向右转且注意力集中,5:眼珠向右转且注意力分散
-        //6:摇到3次以上(小车会倒退)
-        Log.d("benegearble", "控制车指令:" + eegDevice.getPackage().getCarOrder());
-        //值：1到7，越高越专注
-        Log.d("benegearble", "专注力等级:" + eegDevice.getPackage().getAttentionLevel());
-        //值：1-20（1最慢，20最快）
-        Log.d("benegearble", "小车速度:" + eegDevice.getPackage().getSpeed());
-        Log.d("benegearble", "接收时间:" + eegDevice.getPackage().getTimestamp());
-    }
+            @Override
+            public void onECGPlusDiscovery(ECGPlusPackage ecgPlusPackage) {
+                Log.d("benegearble", "ECGPlus广播包:" + ecgPlusPackage.toString());
+                Log.d("benegearble", "ECGPlusDevice:" + ecgPlusPackage.getDevice());
+                Log.d("benegearble", "电量:" + ecgPlusPackage.getBattery());
+                Log.d("benegearble", "心率:" + ecgPlusPackage.getHr());
+                Log.d("benegearble", "SQ:" + ecgPlusPackage.getSq());
+                Log.d("benegearble", "步数:" +ecgPlusPackage.getStep());
+                Log.d("benegearble", "运动强度:" + ecgPlusPackage.getExerciseIntensity());
+                Log.d("benegearble", "接收时间:" + ecgPlusPackage.getTimestamp());
+            }
 
-    //扫描到ECGPlus广播包时回调
-    @Override
-    public void onECGPlusDiscovery(ECGPlusDevice ecgPlusDevice) {
-        Log.d("benegearble", "ECGPlus广播包:" + ecgPlusDevice.getPackage().toString());
-        Log.d("benegearble", "电量:" + ecgPlusDevice.getPackage().getBattery());
-        Log.d("benegearble", "心率:" + ecgPlusDevice.getPackage().getHr());
-        Log.d("benegearble", "SQ:" + ecgPlusDevice.getPackage().getSq());
-        Log.d("benegearble", "步数:" + ecgPlusDevice.getPackage().getStep());
-        Log.d("benegearble", "运动强度:" + ecgPlusDevice.getPackage().getExerciseIntensity());
-        Log.d("benegearble", "接收时间:" + ecgPlusDevice.getPackage().getTimestamp());
-    }
+            @Override
+            public void onHRVDiscovery(HRVPackage hrvPackage) {
+                Log.d("benegearble", "HRV广播包:" + hrvPackage.toString());
+                Log.d("benegearble", "HRV设备:" + hrvPackage.getDevice());
+                Log.d("benegearble", "电量:" + hrvPackage.getBattery());
+                Log.d("benegearble", "心率:" + hrvPackage.getHr());
+                Log.d("benegearble", "SQ:" + hrvPackage.getSq());
+                Log.d("benegearble", "步数:" + hrvPackage.getStep());
+                Log.d("benegearble", "运动强度:" + hrvPackage.getExerciseIntensity());
+                Log.d("benegearble", "SDNN:" +hrvPackage.getSDNN());
+                Log.d("benegearble", "TP:" + hrvPackage.getTP());
+                Log.d("benegearble", "RMSSD:" + hrvPackage.getRMSSD());
+                Log.d("benegearble", "PNN50:" +hrvPackage.getPNN50());
+                Log.d("benegearble", "NN50:" + hrvPackage.getNN50());
+                Log.d("benegearble", "LF:" + hrvPackage.getLF());
+                Log.d("benegearble", "HF:" + hrvPackage.getHF());
+                Log.d("benegearble", "LF/HF:" +hrvPackage.getLF_HF());
+                Log.d("benegearble", "NLF:" + hrvPackage.getNLF());
+                Log.d("benegearble", "NHF:" + hrvPackage.getNHF());
+                Log.d("benegearble", "接收时间:" + hrvPackage.getTimestamp());
+            }
 
-    //扫描到HRV广播包时回调
-    @Override
-    public void onHRVDiscovery(HRVDevice hrvDevice) {
-        Log.d("benegearble", "HRV广播包:" + hrvDevice.getPackage().toString());
-        Log.d("benegearble", "电量:" + hrvDevice.getPackage().getBattery());
-        Log.d("benegearble", "心率:" + hrvDevice.getPackage().getHr());
-        Log.d("benegearble", "SQ:" + hrvDevice.getPackage().getSq());
-        Log.d("benegearble", "步数:" + hrvDevice.getPackage().getStep());
-        Log.d("benegearble", "运动强度:" + hrvDevice.getPackage().getExerciseIntensity());
-        Log.d("benegearble", "SDNN:" + hrvDevice.getPackage().getSDNN());
-        Log.d("benegearble", "TP:" + hrvDevice.getPackage().getTP());
-        Log.d("benegearble", "RMSSD:" + hrvDevice.getPackage().getRMSSD());
-        Log.d("benegearble", "PNN50:" + hrvDevice.getPackage().getPNN50());
-        Log.d("benegearble", "NN50:" + hrvDevice.getPackage().getNN50());
-        Log.d("benegearble", "LF:" + hrvDevice.getPackage().getLF());
-        Log.d("benegearble", "HF:" + hrvDevice.getPackage().getHF());
-        Log.d("benegearble", "LF/HF:" + hrvDevice.getPackage().getLF_HF());
-        Log.d("benegearble", "NLF:" + hrvDevice.getPackage().getNLF());
-        Log.d("benegearble", "NHF:" + hrvDevice.getPackage().getNHF());
-        Log.d("benegearble", "接收时间:" + hrvDevice.getPackage().getTimestamp());
-    }
+            @Override
+            public void onEEGDiscovery(EEGPackage eegPackage) {
+                Log.d("benegearble", "EEG广播包:" + eegPackage.toString());
+                Log.d("benegearble", "EEGDevice:" + eegPackage.getDevice());
+                Log.d("benegearble", "电量:" + eegPackage.getBattery());
+                Log.d("benegearble", "gamma:" + eegPackage.getGamma());
+                Log.d("benegearble", "bata:" + eegPackage.getBata());
+                Log.d("benegearble", "alpha:" + eegPackage.getAlpha());
+                //0:无,1:左转,2:右转
+                Log.d("benegearble", "眼动指令:" + eegPackage.getEyeDirection());
+                //值越低越专注
+                Log.d("benegearble", "专注力值:" + eegPackage.getAttention());
+                //0:眼珠向前看且注意力分散，1:眼珠向前看且注意力集中
+                //2:眼珠向左转且注意力集中,4:眼珠向左转且注意力分散
+                //3:眼珠向右转且注意力集中,5:眼珠向右转且注意力分散
+                //6:摇到3次以上(小车会倒退)
+                Log.d("benegearble", "控制车指令:" + eegPackage.getCarOrder());
+                //值：1到7，越高越专注
+                Log.d("benegearble", "专注力等级:" + eegPackage.getAttentionLevel());
+                //值：1-20（1最慢，20最快）
+                Log.d("benegearble", "小车速度:" + eegPackage.getSpeed());
+                Log.d("benegearble", "接收时间:" + eegPackage.getTimestamp());
+            }
 
-    //扫描到Temp广播包时回调
-    @Override
-    public void onTEMPDiscovery(TempDevice tempDevice) {
-        Log.d("benegearble", "Temp广播包:" + tempDevice.getPackage().toString());
-        Log.d("benegearble", "温度:" + tempDevice.getPackage().getTemp());
-        Log.d("benegearble", "接收时间:" + tempDevice.getPackage().getTimestamp());
-    }
-});
+            @Override
+            public void onTEMPDiscovery(TempPackage tempPackage) {
+                Log.d("benegearble", "Temp广播包:" + tempPackage.toString());
+                Log.d("benegearble", "TempDevice:" + tempPackage.getDevice());
+                Log.d("benegearble", "温度:" + tempPackage.getTemp());
+                Log.d("benegearble", "接收时间:" + tempPackage.getTimestamp());
+            }
+        });
 ```
 
 停止扫描：
@@ -402,6 +415,12 @@ BleManager.getInstance().stopRead(device);
 ```
 
 ### 10.下载硬盘数据
+
+注意：关闭下载硬盘数据的方法:
+
+```java
+BleManager.getInstance().stopDownload(baseDevice);
+```
 
 #### 10.2 ECGPlus
 
