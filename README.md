@@ -11,7 +11,7 @@ benegearble是获取硬件设备数据的蓝牙框架，快速获取ECG125、ECG
 
 ## 下载地址
 
-> implementation 'com.fjxdkj:benegearble:1.1.4'
+> implementation 'com.fjxdkj:benegearble:1.9.8'
 
 ## 注意事项
 
@@ -54,7 +54,7 @@ public class MyApplication extends Application {
 @Override
 public void onCreate() {
     super.onCreate();
-    BleManager.getInstance().init(this);
+    BeneGearBle.getInstance().init(this);
 }
 ```
 
@@ -64,14 +64,12 @@ public void onCreate() {
 @Override
 public void onCreate() {
     super.onCreate();
-    BleManager.getInstance().init(this);
+    BeneGearBle.getInstance().init(this);
     
     BleScanRuleConfig scanRuleConfig = new BleScanRuleConfig.Builder()
             .setScanTimeOut(30*60*1000)  //扫描时间。当输入小于0的数时，无限循环扫描。
-            .setDeviceMac("H1:48:58:45:87:54")  //只扫描指定mac的设备
-            .setDeviceName(true,"ECG+") //扫描指定名称的设备
             .build()
-    BleManager.getInstance().initScanRule(scanRuleConfig);
+    BeneGearBle.getInstance().initScanRule(scanRuleConfig);
 }
 ```
 
@@ -82,36 +80,36 @@ public void onCreate() {
  * 设置连接超时时间
  * seconds，单位是秒
  */
-BleManager.getInstance().setConnectOverTime(int seconds);
+BeneGearBle.getInstance().setConnectOverTime(int seconds);
 /**
  * 获取连接超时时间
  */
-BleManager.getInstance().getConnectOverTime();
+BeneGearBle.getInstance().getConnectOverTime();
 /**
  * 开启Debug模式
  */
-BleManager.getInstance().enableLog(true);
+BeneGearBle.getInstance().enableLog(true);
 /**
  * 获取最大可连接数量
  */
-BleManager.getInstance().getMaxConnectCount();
+BeneGearBle.getInstance().getMaxConnectCount();
 /**
  * 是否支持BLE协议
  */
-BleManager.getInstance().isSupportBle();
+BeneGearBle.getInstance().isSupportBle();
 /**
  * 是否开启蓝牙
  */
-BleManager.getInstance().isBlueEnable();
+BeneGearBle.getInstance().isBlueEnable();
 /**
  * 指定设备是否连接
  * BaseDevice是所有硬件实体类的基类
  */
-BleManager.getInstance().isConnected(BaseDevice device);
+BeneGearBle.getInstance().isConnected(BaseDevice device);
 /**
  * 指定的mac设备是否连接
  */
-BleManager.getInstance().isConnected(String mac);
+BeneGearBle.getInstance().isConnected(String mac);
 ```
 
 ### 3.动态申请权限
@@ -146,7 +144,7 @@ public void onRequestPermissionsResult(int requestCode, @NonNull String[] permis
                 }
             }
             if(result && BleManager.getInstance().isBlueEnable()){
-              scan();
+                //可以进行扫描操作
             }
             break;
     }
@@ -156,7 +154,7 @@ public void onRequestPermissionsResult(int requestCode, @NonNull String[] permis
 ### 4.检查手机是否支持BLE协议
 
 ```java
-if(!BleManager.getInstance().isSupportBle()){
+if(!BeneGearBle.getInstance().isSupportBle()){
     Toast.makeText(this,"该手机不支持BLE协议",Toast.LENGTH_SHORT).show();
     return;
 }
@@ -165,7 +163,7 @@ if(!BleManager.getInstance().isSupportBle()){
 ### 5.打开蓝牙开关
 
 ```java
-if(!BleManager.getInstance().isBlueEnable()){
+if(!BeneGearBle.getInstance().isBlueEnable()){
     Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
     startActivityForResult(intent, 0x01);
 }
@@ -173,37 +171,62 @@ if(!BleManager.getInstance().isBlueEnable()){
 @Override
 protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
     switch (requestCode){
-        case 1:
+        case 0x01:
             if(resultCode==RESULT_OK){
                 if(!isHasPermission())
                     applyPermission();
-                else
-                    scan();
+                else{
+                   //可以进行扫描操作   
+                }
             }
     }
 }
 
 ```
 
-### 6.完整扫描检查逻辑
+### 6.完整扫描检查逻辑(仅供参考)
 
 ```java
-if(!BleManager.getInstance().isSupportBle()){
-    Toast.makeText(this,"该手机不支持BLE协议",Toast.LENGTH_SHORT).show();
+//类成员
+private LocationManager locationManager;
+
+    
+if (!BeneGearBle.getInstance().isSupportBle()) {
+    Toast.makeText(this, "该手机不支持BLE协议", Toast.LENGTH_SHORT).show();
     return;
 }
-//如果还未打开蓝牙开光则打开
-if(!BleManager.getInstance().isBlueEnable()){
-    Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-    startActivityForResult(intent, 0x01);
-}else {
-    //如果蓝牙开关后，先检查是否已经申请权限
-    //已经申请，则直接扫描
-    //还未申请，则申请。然后在onRequestPermissionsResult回调方法中扫描
-    if(!isHasPermission())
-        applyPermission();
-    else
-        scan();
+//Android10 申请位置权限需特殊处理
+//判断是否打开位置权限
+//再判断是否有打开蓝牙
+//最后判断是否有申请定位权限
+if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.Q){
+    locationManager=(LocationManager) getSystemService(Context.LOCATION_SERVICE);
+    if(locationManager!=null &&!locationManager.isLocationEnabled()){
+        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+        startActivityForResult(intent, 0x02);
+    }else{
+        if(!BeneGearBle.getInstance().isBlueEnable()){
+            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(intent, 0x01);
+        }else {
+            if(!isHasPermission())
+                applyPermission();
+            else{
+               //扫描操作
+            }
+        }
+    }
+}else{
+    if(!BeneGearBle.getInstance().isBlueEnable()){
+        Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        startActivityForResult(intent, 0x01);
+    }else {
+        if(!isHasPermission())
+            applyPermission();
+        else{
+            //扫描操作
+        }
+    }
 }
 
 
@@ -219,8 +242,8 @@ public void onRequestPermissionsResult(int requestCode, @NonNull String[] permis
                     break;
                 }
             }
-            if(result && BleManager.getInstance().isBlueEnable()){
-              scan();
+            if(result){
+              //扫描操作
             }
             break;
     }
@@ -231,12 +254,26 @@ public void onRequestPermissionsResult(int requestCode, @NonNull String[] permis
 protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
     switch (requestCode){
         case 1:
-            if(resultCode==RESULT_OK){
+            if( BeneGearBle.getInstance().isBlueEnable()){
                 if(!isHasPermission())
                     applyPermission();
                 else
-                    scan();
+                  //扫描操作
             }
+        case 2:
+            if(locationManager.isLocationEnabled()){
+                if(!BeneGearBle.getInstance().isBlueEnable()){
+                    Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    startActivityForResult(intent, 0x01);
+                }else {
+                    if(!isHasPermission()){
+                        applyPermission();
+                    } else{
+                       //扫描操作
+                    }
+                }
+            }
+            break;
     }
 }
 
@@ -255,10 +292,12 @@ private void applyPermission() {
 
 ```
 
-### 7.扫描
+### 7.扫描相关操作
+
+扫描：
 
 ```java
-        BleManager.getInstance().scan(new OnScanListener() {
+        BeneGearBle.getInstance().scan(new OnScanListener() {
             @Override
             public void onScanStarted() {
                 Log.d("benegearble", "onScanStarted");
@@ -323,7 +362,7 @@ private void applyPermission() {
                 //0:眼珠向前看且注意力分散，1:眼珠向前看且注意力集中
                 //2:眼珠向左转且注意力集中,4:眼珠向左转且注意力分散
                 //3:眼珠向右转且注意力集中,5:眼珠向右转且注意力分散
-                //6:摇到3次以上(小车会倒退)
+                //6:摇头3次以上(小车会倒退)
                 Log.d("benegearble", "控制车指令:" + eegPackage.getCarOrder());
                 //值：1到7，越高越专注
                 Log.d("benegearble", "专注力等级:" + eegPackage.getAttentionLevel());
@@ -345,13 +384,13 @@ private void applyPermission() {
 停止扫描：
 
 ```java
- BleManager.getInstance().cancelScan();
+ BeneGearBle.getInstance().cancelScan();
 ```
 
 ### 8.返回设备的硬件信息
 
 ```java
-BleManager.getInstance().getDeviceInfo(device, new OnGetDeviceInfoListener() {
+BeneGearBle.getInstance().getDeviceInfo(device, new OnGetDeviceInfoListener() {
     @Override
     public void onStart() {
         Log.d("benegearble","onStart");
@@ -375,43 +414,61 @@ BleManager.getInstance().getDeviceInfo(device, new OnGetDeviceInfoListener() {
 
 ### 9.读取实时数据（波形数据）
 
-能够读取实时数据的设备只有HRV、ECGPlus以及EEG。
+能够读取实时数据的设备只有HRV、ECG+、ECG125以及EEG。
 
 ```java
-BleManager.getInstance().readDeviceMemory(device, new OnReadMemoryDataListener() {
+
+BeneGearBle.getInstance().readDeviceMemory(device, new OnReadMemoryDataListener() {
     @Override
     public void onStart() {
         Log.d("benegearble","onStart");
     }
 
     @Override
-    public void onError(String s) {
+    public void onError(String msg) {
         Log.d("benegearble","onError="+s);
     }
 
     @Override
-    public void onSuccess() {
+    public void onSuccess(WaveformParam param) {
         Log.d("benegearble","onSuccess");
     }
 
-    //每秒回调8-10个数值左右
+   /**
+     * 每秒回调8-10个波形数值
+     * @param originalData 原始数值
+     * @param data  真实波形数值
+     */
     @Override
-    public void onRead(double[] doubles) {
+    public void onRead(double[] originalData, double[] data) {
         Log.d("benegearble",Arrays.toString(doubles));
     }
 
-    //关闭读取后，会回调该方法
+  /**
+    * 主动停止读取、主动断开连接、设备意外断开连接会回调
+    * @param isActiveDisConnected 是否主动断开连接，如果主动停止读取以及主动断开连接，那么isActiveDisConnected为true。意外断开为false
+    */
     @Override
-    public void onStop() {
+    public void onStop(boolean isActiveDisConnected) {
         Log.d("benegearble","onStop");
     }
 });
 ```
 
+暂停读取:
+
+```
+BeneGearBle.getInstance().pauseRead(device);
+```
+
+PS:与关闭读取的区别在于暂停读取还会保持会传感器的连接
+
+
+
 关闭读取:
 
 ```java
-BleManager.getInstance().stopRead(device);
+BeneGearBle.getInstance().stopRead(device);
 ```
 
 ### 10.下载硬盘数据
@@ -419,7 +476,7 @@ BleManager.getInstance().stopRead(device);
 注意：关闭下载硬盘数据的方法:
 
 ```java
-BleManager.getInstance().stopDownload(baseDevice);
+BeneGearBle.getInstance().stopDownload(baseDevice);
 ```
 
 #### 10.2 ECGPlus
@@ -437,7 +494,7 @@ ECGPlus共有5种硬盘数据，心率、正常波形、非正常波形、密度
 ##### 10.2.1下载ECGPlus全部类型的硬盘数据
 
 ```java
-BleManager.getInstance().downloadHardDiskData(ecgPlusDevice, new OnDownloadHardDiskDataListener<ECGPlusHardDiskData>() {
+BeneGearBle.getInstance().downloadHardDiskData(ecgPlusDevice, new OnDownloadHardDiskDataListener<ECGPlusHardDiskData>() {
         @Override
         public void onStart() {
             Log.d("benegearble","onStart");
@@ -464,23 +521,17 @@ BleManager.getInstance().downloadHardDiskData(ecgPlusDevice, new OnDownloadHardD
     });
 ```
 
-##### 10.2.2 重载方法及其HR回补
+##### 10.2.2 重载方法
 
 ```java
         /**
          * 下载ECGPlus指定单个类型的硬盘数据
          */
-        BleManager.getInstance().downloadHardDiskData(ECGPlusDevice ecgplusDevice, Instruction intruction, OnDownloadHardDiskDataListener<ECGPlusHardDiskData> linster);
+        BeneGearBle.getInstance().downloadHardDiskData(ECGPlusDevice ecgplusDevice, Instruction intruction, OnDownloadHardDiskDataListener<ECGPlusHardDiskData> linster);
         /**
          * 下载ECGPlus指定多个类型的硬盘数据
          */
-        BleManager.getInstance().downloadHardDiskData(ECGPlusDevice ecgplusDevice, Instruction[] intructions, OnDownloadHardDiskDataListener<ECGPlusHardDiskData> linster);
-        /**
-         * 下载指定时间ECGPlus的HR数据
-         * seconds单位为秒
-         * downloadHR(15*1000);//表示下载此刻到过去15秒的HR数据
-         */
-        BleManager.getInstance().downloadHR(ECGPlusDevice ecgplusDevice, int seconds, OnDownloadHardDiskDataListener<ECGPlusHardDiskData> linster)
+        BeneGearBle.getInstance().downloadHardDiskData(ECGPlusDevice ecgplusDevice, Instruction[] intructions, OnDownloadHardDiskDataListener<ECGPlusHardDiskData> linster);
 ```
 
 #### 10.3 HRV
@@ -499,7 +550,7 @@ HRV是ECGPLus的升级版，相对于ECGPlus多了一个心率变异的数据。
 ##### 10.3.1 下载HRV全部类型的硬盘数据
 
 ```java
-BleManager.getInstance().downloadHardDiskData(hrvDevice, new OnDownloadHardDiskDataListener<HRVHardDiskData>() {
+BeneGearBle.getInstance().downloadHardDiskData(hrvDevice, new OnDownloadHardDiskDataListener<HRVHardDiskData>() {
     @Override
     public void onStart() {
         Log.d("benegearble","onStart");
@@ -512,7 +563,12 @@ BleManager.getInstance().downloadHardDiskData(hrvDevice, new OnDownloadHardDiskD
 
     @Override
     public void onSuccess(HRVHardDiskData data) {
-        Log.d("benegearble","心率数据="+data.getHateDataList());
+        Log.d("benegearble","所有笔的心率列表="+data.getHateList());
+        List<HateData> hateDataList=data.getHateDataList();
+        for(HateData item :hateDataList){
+           Log.d("benegearble","该笔的心率列表:"+item.getmList().size());
+           Log.d("benegearble","该笔不正常波形数据个数:"+item.getmList().size());
+        }
         Log.d("benegearble","正常波形数据="+data.getNorWaveformDataList());
         Log.d("benegearble","非正常波形数据="+data.getUnNorWaveformDataList());
         Log.d("benegearble","密度强度="+data.getDensityDataList());
@@ -527,23 +583,43 @@ BleManager.getInstance().downloadHardDiskData(hrvDevice, new OnDownloadHardDiskD
 });
 ```
 
-##### 10.3.2 重载方法及其HR回补
+##### 10.3.2  只下载其中一个类型的全部数据
 
 ```java
-        /**
-         * 下载HRV指定单个类型的硬盘数据
-         */
-        BleManager.getInstance().downloadHardDiskData(HRVDevice hrvDevice, Instruction intruction, OnDownloadHardDiskDataListener<HRVHardDiskData> linster);
-        /**
-         * 下载HRV指定多个类型的硬盘数据
-         */
-        BleManager.getInstance().downloadHardDiskData(HRVDevice hrvDevice, Instruction[] intructions, OnDownloadHardDiskDataListener<HRVHardDiskData> linster);
-        /**
-         * 下载指定时间HRV的HR数据
-         * seconds单位为秒
-         * downloadHR(15*1000);//表示下载此刻到过去15秒的HR数据
-         */
-        BleManager.getInstance().downloadHR(HRVDevice hrvDevice, int seconds, OnDownloadHardDiskDataListener<HRVHardDiskData> linster);
+ BeneGearBle.getInstance().downloadHardDiskData(hrvDevice,Instruction.HATE, new OnDownloadHardDiskDataListener<HRVHardDiskData>() {});
+```
+
+##### 10.3.3 只下载其中一个类型以及指定时间的数据
+
+注：2021-01-28 13:48:47的时间戳是1611812927000L
+
+PS：获取数据是此时此刻至2021-01-28 13:48:47的HRV心率数据，不在该范围内的数据不会获取到
+
+```java
+        BeneGearBle.getInstance().downloadHardDiskData(hrvDevice,Instruction.HATE,1611812927000L, new OnDownloadHardDiskDataListener<HRVHardDiskData>() {});
+```
+
+##### 10.3.4 只下载多个类型以及指定时间的数据
+
+注：2021-01-28 13:48:47的时间戳是1611812927000L
+
+PS：获取数据是此时此刻至2021-01-28 13:48:47的HRV心率、心率变异以及不正常波形数据，不在该范围内的数据不会获取到
+
+```java
+        Instruction[] instructions=new Instruction[]{Instruction.HATE,Instruction.HATE_VARIATION,Instruction.UN_NOR_WAREFORM};
+        BeneGearBle.getInstance().downloadHardDiskData(hrvDevice,instructions,1611812927000L, new OnDownloadHardDiskDataListener<HRVHardDiskData>() {});
+```
+
+##### 10.3.5 下载多个类型、指定时间的数据以及下完后是否断开连接
+
+注：2021-01-28 13:48:47的时间戳是1611812927000L
+
+PS：获取数据是此时此刻至2021-01-28 13:48:47的HRV心率、心率变异以及不正常波形数据，不在该范围内的数据不会获取到。false表示下载完后继续保持连接
+
+```java
+        Instruction[] instructions=new Instruction[]{Instruction.HATE,Instruction.HATE_VARIATION,Instruction.UN_NOR_WAREFORM};
+
+        BeneGearBle.getInstance().downloadHardDiskData(hrvDevice,instructions,1611812927000L,false, new OnDownloadHardDiskDataListener<HRVHardDiskData>() {});
 ```
 
 #### 10.4 EEG
@@ -557,7 +633,7 @@ EEG设备只有脑波数据，对应一个指令。
 ##### 10.4.1 下载EEG硬盘数据
 
 ```java
-BleManager.getInstance().downloadHardDiskData(eegDevice, new OnDownloadHardDiskDataListener<EEGHardDiskData>() {
+BeneGearBle.getInstance().downloadHardDiskData(eegDevice, new OnDownloadHardDiskDataListener<EEGHardDiskData>() {
     @Override
     public void onStart() {
         Log.d("benegearble","onStart");
@@ -600,7 +676,7 @@ BleManager.getInstance().downloadHardDiskData(eegDevice, new OnDownloadHardDiskD
         /**
          * 下载指定时间EEG的脑波
          */
-        BleManager.getInstance().downloadHardDiskData(EEGDevice eegDevice,,int seconds, OnDownloadHardDiskDataListener<EEGHardDiskData> linster);
+        BeneGearBle.getInstance().downloadHardDiskData(EEGDevice eegDevice,,int seconds, OnDownloadHardDiskDataListener<EEGHardDiskData> linster);
 ```
 
 ##### 10.5 Temp
@@ -614,7 +690,7 @@ Temp只有一种温度数据，对应一条指令。
 ##### 10.5.1 下载EEG硬盘数据
 
 ```java
-BleManager.getInstance().downloadHardDiskData(tempDevice, new OnDownloadHardDiskDataListener<List<Temperature>>() {
+BeneGearBle.getInstance().downloadHardDiskData(tempDevice, new OnDownloadHardDiskDataListener<List<Temperature>>() {
     @Override
     public void onStart() {
         Log.d("benegearble","onStart");
@@ -646,9 +722,16 @@ BleManager.getInstance().downloadHardDiskData(tempDevice, new OnDownloadHardDisk
         /**
          * 下载指定时间Temp的温度值
          */
-        BleManager.getInstance().downloadHardDiskData(TempDevice tempDevice,,int seconds, OnDownloadHardDiskDataListener<List<Temperature> linster);
+        BeneGearBle.getInstance().downloadHardDiskData(TempDevice tempDevice,,int seconds, OnDownloadHardDiskDataListener<List<Temperature> linster);
 ```
 
 ## 问题咨询
 
-如果在开发过程中出现问题，请联系QQ：879768021
+如果在开发过程中出现问题，请联系
+
+QQ：879768021
+
+微信：everyguo0828
+
+手机:18250000332
+
