@@ -11,7 +11,7 @@ benegearble是获取硬件设备数据的蓝牙框架，快速获取ECG125、ECG
 
 ## 下载地址
 
-> implementation 'com.fjxdkj:benegearble:1.9.8'
+> implementation 'com.fjxdkj:benegearble:2.0.5'
 
 ## 注意事项
 
@@ -319,10 +319,20 @@ private void applyPermission() {
                 Log.d("benegearble", "ECGPlusDevice:" + ecgPlusPackage.getDevice());
                 Log.d("benegearble", "电量:" + ecgPlusPackage.getBattery());
                 Log.d("benegearble", "心率:" + ecgPlusPackage.getHr());
-                Log.d("benegearble", "SQ:" + ecgPlusPackage.getSq());
-                Log.d("benegearble", "步数:" +ecgPlusPackage.getStep());
-                Log.d("benegearble", "运动强度:" + ecgPlusPackage.getExerciseIntensity());
                 Log.d("benegearble", "接收时间:" + ecgPlusPackage.getTimestamp());
+                //SQ、运动强度和步数会轮流出现，需要先判定当前广播包携带的是哪个类型数据
+                switch (ecgPlusPackage.getDataType()){
+                    case SQ:
+                        Log.d("benegearble", "SQ:" + ecgPlusPackage.getSq());
+                        break;
+                    case EXERCISEINTENSITY:
+                        Log.d("benegearble", "运动强度:" + ecgPlusPackage.getExerciseIntensity());
+                        break;
+                    case STEP:
+                        Log.d("benegearble", "步数:" +ecgPlusPackage.getStep());
+                        break;
+                }
+
             }
 
             @Override
@@ -331,9 +341,6 @@ private void applyPermission() {
                 Log.d("benegearble", "HRV设备:" + hrvPackage.getDevice());
                 Log.d("benegearble", "电量:" + hrvPackage.getBattery());
                 Log.d("benegearble", "心率:" + hrvPackage.getHr());
-                Log.d("benegearble", "SQ:" + hrvPackage.getSq());
-                Log.d("benegearble", "步数:" + hrvPackage.getStep());
-                Log.d("benegearble", "运动强度:" + hrvPackage.getExerciseIntensity());
                 Log.d("benegearble", "SDNN:" +hrvPackage.getSDNN());
                 Log.d("benegearble", "TP:" + hrvPackage.getTP());
                 Log.d("benegearble", "RMSSD:" + hrvPackage.getRMSSD());
@@ -345,6 +352,24 @@ private void applyPermission() {
                 Log.d("benegearble", "NLF:" + hrvPackage.getNLF());
                 Log.d("benegearble", "NHF:" + hrvPackage.getNHF());
                 Log.d("benegearble", "接收时间:" + hrvPackage.getTimestamp());
+                //SQ、运动强度、步数、RRI和不正常波形次数会轮流出现，需要先判定当前广播包携带的是哪个类型数据
+                switch (hrvPackage.getDataType()){
+                    case SQ:
+                        Log.d("benegearble", "SQ:" + hrvPackage.getSq());
+                        break;
+                    case EXERCISEINTENSITY:
+                        Log.d("benegearble", "运动强度:" + hrvPackage.getExerciseIntensity());
+                        break;
+                    case STEP:
+                        Log.d("benegearble", "步数:" +hrvPackage.getStep());
+                        break;
+                    case RRI:
+                        Log.d("benegearble", "RRI:" +hrvPackage.getMeanRRI());
+                        break;
+                    case UN_NORMAL_WAVE_COUNT:
+                        Log.d("benegearble", "不正常波形次数:" +hrvPackage.getArrhythmiaCount());
+                        break;
+                }
             }
 
             @Override
