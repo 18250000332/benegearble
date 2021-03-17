@@ -11,7 +11,7 @@ benegearble是获取硬件设备数据的蓝牙框架，快速获取ECG125、ECG
 
 ## 下载地址
 
-> implementation 'com.fjxdkj:benegearble:2.0.5'
+> implementation 'com.fjxdkj:benegearble:2.0.8'
 
 ## 注意事项
 
@@ -394,6 +394,17 @@ private void applyPermission() {
                 //值：1-20（1最慢，20最快）
                 Log.d("benegearble", "小车速度:" + eegPackage.getSpeed());
                 Log.d("benegearble", "接收时间:" + eegPackage.getTimestamp());
+                
+                                //版本大于1.3.7才有，版本之前默认为0
+                Log.d("benegearble", "Delta:" + eegPackage.getDeltaPower());
+                Log.d("benegearble", "Theta:" + eegPackage.getThetaPower());
+                Log.d("benegearble", "Alpha L:" + eegPackage.getAlphaLowPower());
+                Log.d("benegearble", "Alpha M:" + eegPackage.getAlphaMidPower());
+                Log.d("benegearble", "Alpha H:" + eegPackage.getAlphaHighPower());
+                Log.d("benegearble", "Beta L:" + eegPackage.getBetaLowPower());
+                Log.d("benegearble", "Beta M:" + eegPackage.getBetaMidPower());
+                Log.d("benegearble", "Beta H:" + eegPackage.getBetaHighPower());
+                Log.d("benegearble", "Gamma:" + eegPackage.getGammaPower());
             }
 
             @Override
