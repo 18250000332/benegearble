@@ -11,7 +11,7 @@ benegearble是获取硬件设备数据的蓝牙框架，快速获取ECG125、ECG
 
 ## 下载地址
 
-> implementation 'com.fjxdkj:benegearble:2.1.0'
+> 
 
 ## 注意事项
 
@@ -292,7 +292,50 @@ private void applyPermission() {
 
 ```
 
-### 7.扫描相关操作
+### 7.连接与断开
+
+连接:
+
+```java
+BeneGearBle.getInstance().connect(baseDevice, new OnConnectListener() {
+    @Override
+    public void onStartConnect() {
+        Log.d("benegearble","onStartConnect");
+    }
+
+    @Override
+    public void onConnectFail(BaseDevice baseDevice, BleException exception) {
+        Log.d("benegearble","onConnectFail");
+    }
+
+    @Override
+    public void onConnectSuccess(BaseDevice baseDevice, BluetoothGatt gatt, int status) {
+        Log.d("benegearble","onConnectSuccess");
+    }
+
+    //isActiveDisConnected主动断开连接(如调用disconnect函数)为true
+    @Override
+    public void onDisConnected(boolean isActiveDisConnected, BaseDevice baseDevice, BluetoothGatt gatt, int status) {
+        Log.d("benegearble","onDisConnected="+isActiveDisConnected);
+    }
+});
+```
+
+Ps:这里的baseDevice包括ECG125Device、ECGPlusDevice、EEGDevice、HRVDevice等
+
+
+
+断开:
+
+```java
+BeneGearBle.getInstance().disconnect(baseDevice);
+```
+
+PS:执行disconnect方法后,会回调connect函数中的onDisConnected方法。
+
+
+
+### 8.扫描相关操作
 
 扫描：
 
@@ -423,7 +466,7 @@ private void applyPermission() {
  BeneGearBle.getInstance().cancelScan();
 ```
 
-### 8.返回设备的硬件信息
+### 9.返回设备的硬件信息
 
 ```java
 BeneGearBle.getInstance().getDeviceInfo(device, new OnGetDeviceInfoListener() {
@@ -448,7 +491,7 @@ BeneGearBle.getInstance().getDeviceInfo(device, new OnGetDeviceInfoListener() {
 });
 ```
 
-### 9.读取实时数据（波形数据）
+### 10.读取实时数据（波形数据）
 
 能够读取实时数据的设备只有HRV、ECG+、ECG125以及EEG。
 
@@ -507,7 +550,7 @@ PS:与关闭读取的区别在于暂停读取还会保持会传感器的连接
 BeneGearBle.getInstance().stopRead(device);
 ```
 
-### 10.下载硬盘数据
+### 11.下载硬盘数据
 
 注意：关闭下载硬盘数据的方法:
 
@@ -515,7 +558,7 @@ BeneGearBle.getInstance().stopRead(device);
 BeneGearBle.getInstance().stopDownload(baseDevice);
 ```
 
-#### 10.2 ECGPlus
+#### 11.2 ECGPlus
 
 ECGPlus共有5种硬盘数据，心率、正常波形、非正常波形、密度强度以及步数。分别有5五种指令对应。当需要只获取指定类型数据的时候，要对照下面的表。
 
@@ -527,7 +570,7 @@ ECGPlus共有5种硬盘数据，心率、正常波形、非正常波形、密度
 | Instruction.DENSITY         | 密度强度   |
 | Instruction.STEP            | 步数       |
 
-##### 10.2.1下载ECGPlus全部类型的硬盘数据
+##### 11.2.1下载ECGPlus全部类型的硬盘数据
 
 ```java
 BeneGearBle.getInstance().downloadHardDiskData(ecgPlusDevice, new OnDownloadHardDiskDataListener<ECGPlusHardDiskData>() {
@@ -557,7 +600,7 @@ BeneGearBle.getInstance().downloadHardDiskData(ecgPlusDevice, new OnDownloadHard
     });
 ```
 
-##### 10.2.2 重载方法
+##### 11.2.2 重载方法
 
 ```java
         /**
@@ -570,7 +613,7 @@ BeneGearBle.getInstance().downloadHardDiskData(ecgPlusDevice, new OnDownloadHard
         BeneGearBle.getInstance().downloadHardDiskData(ECGPlusDevice ecgplusDevice, Instruction[] intructions, OnDownloadHardDiskDataListener<ECGPlusHardDiskData> linster);
 ```
 
-#### 10.3 HRV
+#### 11.3 HRV
 
 HRV是ECGPLus的升级版，相对于ECGPlus多了一个心率变异的数据。当需要只获取指定类型数据的时候，要对照下面的表。
 
@@ -583,7 +626,7 @@ HRV是ECGPLus的升级版，相对于ECGPlus多了一个心率变异的数据。
 | Instruction.STEP            | 步数       |
 | Instruction.HATE_VARIATION  | 心率变异   |
 
-##### 10.3.1 下载HRV全部类型的硬盘数据
+##### 11.3.1 下载HRV全部类型的硬盘数据
 
 ```java
 BeneGearBle.getInstance().downloadHardDiskData(hrvDevice, new OnDownloadHardDiskDataListener<HRVHardDiskData>() {
@@ -619,13 +662,13 @@ BeneGearBle.getInstance().downloadHardDiskData(hrvDevice, new OnDownloadHardDisk
 });
 ```
 
-##### 10.3.2  只下载其中一个类型的全部数据
+##### 11.3.2  只下载其中一个类型的全部数据
 
 ```java
  BeneGearBle.getInstance().downloadHardDiskData(hrvDevice,Instruction.HATE, new OnDownloadHardDiskDataListener<HRVHardDiskData>() {});
 ```
 
-##### 10.3.3 只下载其中一个类型以及指定时间的数据
+##### 11.3.3 只下载其中一个类型以及指定时间的数据
 
 注：2021-01-28 13:48:47的时间戳是1611812927000L
 
@@ -635,7 +678,7 @@ PS：获取数据是此时此刻至2021-01-28 13:48:47的HRV心率数据，不�
         BeneGearBle.getInstance().downloadHardDiskData(hrvDevice,Instruction.HATE,1611812927000L, new OnDownloadHardDiskDataListener<HRVHardDiskData>() {});
 ```
 
-##### 10.3.4 只下载多个类型以及指定时间的数据
+##### 11.3.4 只下载多个类型以及指定时间的数据
 
 注：2021-01-28 13:48:47的时间戳是1611812927000L
 
@@ -646,7 +689,7 @@ PS：获取数据是此时此刻至2021-01-28 13:48:47的HRV心率、心率变�
         BeneGearBle.getInstance().downloadHardDiskData(hrvDevice,instructions,1611812927000L, new OnDownloadHardDiskDataListener<HRVHardDiskData>() {});
 ```
 
-##### 10.3.5 下载多个类型、指定时间的数据以及下完后是否断开连接
+##### 11.3.5 下载多个类型、指定时间的数据以及下完后是否断开连接
 
 注：2021-01-28 13:48:47的时间戳是1611812927000L
 
@@ -658,7 +701,7 @@ PS：获取数据是此时此刻至2021-01-28 13:48:47的HRV心率、心率变�
         BeneGearBle.getInstance().downloadHardDiskData(hrvDevice,instructions,1611812927000L,false, new OnDownloadHardDiskDataListener<HRVHardDiskData>() {});
 ```
 
-#### 10.4 EEG
+#### 11.4 EEG
 
 EEG设备只有脑波数据，对应一个指令。
 
@@ -666,7 +709,7 @@ EEG设备只有脑波数据，对应一个指令。
 | --------------- | -------- |
 | Instruction.EEG | 脑波     |
 
-##### 10.4.1 下载EEG硬盘数据
+##### 11.4.1 下载EEG硬盘数据
 
 ```java
 BeneGearBle.getInstance().downloadHardDiskData(eegDevice, new OnDownloadHardDiskDataListener<EEGHardDiskData>() {
@@ -706,7 +749,7 @@ BeneGearBle.getInstance().downloadHardDiskData(eegDevice, new OnDownloadHardDisk
 
 ```
 
-##### 10.4.2 重载方法
+##### 11.4.2 重载方法
 
 ```java
         /**
@@ -715,7 +758,7 @@ BeneGearBle.getInstance().downloadHardDiskData(eegDevice, new OnDownloadHardDisk
         BeneGearBle.getInstance().downloadHardDiskData(EEGDevice eegDevice,,int seconds, OnDownloadHardDiskDataListener<EEGHardDiskData> linster);
 ```
 
-##### 10.5 Temp
+##### 11.5 Temp
 
 Temp只有一种温度数据，对应一条指令。
 
@@ -723,7 +766,7 @@ Temp只有一种温度数据，对应一条指令。
 | ---------------- | -------- |
 | Instruction.TEMP | 温度     |
 
-##### 10.5.1 下载EEG硬盘数据
+##### 11.5.1 下载EEG硬盘数据
 
 ```java
 BeneGearBle.getInstance().downloadHardDiskData(tempDevice, new OnDownloadHardDiskDataListener<List<Temperature>>() {
@@ -752,7 +795,7 @@ BeneGearBle.getInstance().downloadHardDiskData(tempDevice, new OnDownloadHardDis
 });
 ```
 
-##### 10.5.2 重载方法
+##### 11.5.2 重载方法
 
 ```java
         /**
